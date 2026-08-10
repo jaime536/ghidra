@@ -33,11 +33,16 @@ jobs:
 
   build:
     strategy:
-      # A failure on one platform should not cancel the other; the Linux package is the one
+      # A failure on one platform should not cancel the others; the Linux package is the one
       # most people need.
       fail-fast: false
       matrix:
-        platform: [ubuntu-latest, windows-latest]
+        # macos-latest is Apple Silicon (mac_arm_64).  Native code is packaged per-platform and
+        # Application.getOSFile has no linux->mac fallback, so a Mac package must be built on a
+        # Mac.  Note this package targets Apple Silicon only: the one fallback that exists runs
+        # the other way (MAC_ARM_64 -> MAC_X86_64, i.e. Apple Silicon can use Intel binaries via
+        # Rosetta), so serving Intel Macs would mean adding a macos-13 leg.
+        platform: [ubuntu-latest, windows-latest, macos-latest]
 
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 120
