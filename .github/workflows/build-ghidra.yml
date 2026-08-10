@@ -4,6 +4,13 @@ on:
   push:
   workflow_dispatch:
 
+defaults:
+  run:
+    # Windows runners default to PowerShell, which cannot run the awk/$GITHUB_ENV steps below
+    # or the gradlew shell script.  Git Bash is present on every runner and the Gradle wrapper
+    # detects MSYS, so one bash shell serves both platforms.
+    shell: bash
+
 jobs:
   # Fast feedback on the localization assets; these are hand-edited files where a mistake is
   # invisible at runtime (the string simply stays English), so they are checked explicitly.
@@ -13,19 +20,34 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Check translation catalogs
-        run: python3 tools/check_catalog.py Ghidra/Extensions/zh-cn-l10n/data/i18n/*.properties
+        run: python tools/check_catalog.py Ghidra/Extensions/zh-cn-l10n/data/i18n/*.properties
 
       - name: Report stale help translations
-        run: python3 tools/help_zh.py check
+        run: python tools/help_zh.py check
 
   build:
     strategy:
+      # A failure on one platform should not cancel the other; the Linux package is the one
+      # most people need.
+      fail-fast: false
       matrix:
-        platform: [ubuntu-latest]
+        platform: [ubuntu-latest, windows-latest]
 
     runs-on: ${{ matrix.platform }}
+    timeout-minutes: 120
+
     steps:
+      # Ghidra's source tree is deeply nested and the build writes paths deeper still, which
+      # trips the legacy 260-character limit.  This must precede checkout.
+      - name: Enable long paths (Windows)
+        if: runner.os == 'Windows'
+        run: git config --system core.longpaths true
 
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -39,17 +61,30 @@ jobs:
           distribution: 'temurin'
           java-version: '${{ env.JDK_VER }}'
 
+      # Required by the build itself (PyGhidra); Gradle probes for python3/python/py, and
+      # setup-python guarantees a version inside application.python.supported.
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # No MSVC setup step: GPL/vsconfig.gradle locates Visual Studio itself through vswhere.exe
+      # and reads the SDK version out of vcvarsall.bat, so the toolchain does not need to be
+      # pre-activated in the shell.  windows-latest ships VS with the C++ workload (MSVC,
+      # Windows SDK, ATL), which is what CheckToolChain requires.
       - name: Fetch Dependencies
         run: ./gradlew -I gradle/support/fetchDependencies.gradle -DhideDownloadProgress -DnoEclipse
 
       # The Chinese help pages live in a parallel tree so that upstream's own help files stay
       # untouched in git; they have to be laid over the source tree before the help tasks run.
       - name: Overlay Chinese help pages
-        run: python3 tools/help_zh.py apply
+        run: python tools/help_zh.py apply
 
       - name: Build Ghidra
         run: ./gradlew buildGhidra --parallel
 
+      # buildGhidra only produces a package for the platform it runs on, so each matrix leg
+      # contributes its own zip.
       - name: Upload distribution
         uses: actions/upload-artifact@v4
         with:

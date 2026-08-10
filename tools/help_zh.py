@@ -162,8 +162,10 @@ def cmd_apply(args) -> int:
     if args.revert:
         # restore only the help pages this script touches, never the whole tree
         if not args.dry_run and targets:
-            subprocess.run(["git", "checkout", "--"] + targets,
-                           cwd=REPO_ROOT, check=True)
+            # chunked: Windows caps a command line at ~8k characters
+            for i in range(0, len(targets), 100):
+                subprocess.run(["git", "checkout", "--"] + targets[i:i + 100],
+                               cwd=REPO_ROOT, check=True)
         print(f"{'将还原' if args.dry_run else '已还原'} {len(targets)} 个上游帮助文件。")
         return 0
 

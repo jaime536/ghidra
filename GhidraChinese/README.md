@@ -107,8 +107,8 @@ python3 tools/help_zh.py apply --revert
 | job | 触发时机 | 作用 |
 |---|---|---|
 | `localization` | 每次 push | 跑词典体检 + 帮助译文陈旧检测，几秒出结果 |
-| `build` | 每次 push | 抓依赖 → 叠加中文帮助 → `gradle buildGhidra` → 上传 `build/dist/*.zip` |
-| `release` | **只在推 tag 时** | 收集各平台产物，自动创建 GitHub Release 并附上 zip |
+| `build` | 每次 push | **Linux + Windows 两个平台**并行：抓依赖 → 叠加中文帮助 → `gradle buildGhidra` → 上传 zip |
+| `release` | **只在推 tag 时** | 收集两个平台的产物，自动创建 GitHub Release 并附上 zip |
 
 JDK 版本不写死，而是从 `Ghidra/application.properties` 的 `application.java.min` 读出来：
 
@@ -118,7 +118,8 @@ JDK 版本不写死，而是从 `Ghidra/application.properties` 的 `application
 
 所以升级基线（21 → 25）时 CI 会自己跟着变。
 
-**日常**：push 之后到 Actions 页面下载 `ghidra-zh-ubuntu-latest` 这个 artifact 即可。
+**日常**：push 之后到 Actions 页面下载 artifact —— `ghidra-zh-ubuntu-latest` 或
+`ghidra-zh-windows-latest`。
 
 **正式发版**：打一个 tag 推上去，Release 会自动生成：
 
@@ -129,9 +130,23 @@ git push origin ghidra-zh-12.1.2-r1
 
 产物是标准的 Ghidra 发行包 `build/dist/ghidra_<版本>_<日期>.zip`，解压后 `./ghidraRun` 直接跑。
 
-> `buildGhidra` **只产出当前 runner 平台的包**。要出 Windows 包，把 `build` job 的
-> `matrix.platform` 加上 `windows-latest`（Windows runner 需要 MSVC 构建原生组件，首次跑建议
-> 先手动 `workflow_dispatch` 验证一次再并入日常流程）。
+`buildGhidra` **只产出当前 runner 平台的包**，所以 Linux 包和 Windows 包分别由 matrix 的两条腿产出。
+
+### Windows 构建的几个要点
+
+- **shell 统一为 bash**（workflow 级 `defaults.run.shell`）。Windows runner 默认是 PowerShell，
+  那会让读取 JDK 版本的 awk 步骤和 `./gradlew` 都失败；Git Bash 每个 runner 都有，
+  而 Gradle wrapper 本身能识别 MSYS。
+- **不需要 MSVC 环境预激活**。`GPL/vsconfig.gradle` 会自己用 `vswhere.exe` 找 Visual Studio，
+  再从 `vcvarsall.bat` 读出 SDK 版本，所以不用引入第三方的 msvc-dev-cmd action。
+  `windows-latest` 自带 VS 的 C++ 工作负载（MSVC + Windows SDK + ATL），正好满足
+  `CheckToolChain` 的要求。
+- **长路径**。Ghidra 源码树本身就深，构建产物还要再深几层，会撞上 260 字符上限；
+  所以 checkout **之前**先 `git config --system core.longpaths true`。
+- **Python 用 `actions/setup-python`**，统一调 `python`（Git Bash 里通常没有 `python3`）。
+  Gradle 自己会按 `python3 / python / py` 顺序探测，setup-python 保证版本落在
+  `application.python.supported` 范围内。
+- **`fail-fast: false`**：一个平台挂掉不会连累另一个，Linux 包照常产出。
 
 ## 已知边界
 
