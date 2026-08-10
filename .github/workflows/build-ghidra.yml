@@ -43,11 +43,25 @@ jobs:
     timeout-minutes: 120
 
     steps:
-      # Ghidra's source tree is deeply nested and the build writes paths deeper still, which
-      # trips the legacy 260-character limit.  This must precede checkout.
-      - name: Enable long paths (Windows)
+      # Both settings have to precede checkout.
+      #
+      # Line endings: Ghidra's gradlew reads application.properties with a POSIX `read` loop and
+      # then checks application.release.name against PUBLIC/DEV.  A CRLF checkout leaves a
+      # trailing \r on every value, that check fails, and the script exits with a misleading
+      # "Please install Gradle ... and put it on your PATH".  autocrlf has to be turned off *and*
+      # eol forced, since autocrlf overrides core.eol and .gitattributes marks *.properties as
+      # `text` (whose checkout encoding follows core.eol, defaulting to native).  Files that
+      # genuinely need CRLF - .bat, .sln, .vcxproj - carry an explicit eol=crlf attribute, which
+      # outranks core.eol, so MSVC tooling is unaffected.
+      #
+      # Long paths: the source tree is deeply nested and the build writes deeper still, which
+      # trips the legacy 260-character limit.
+      - name: Configure git (Windows)
         if: runner.os == 'Windows'
-        run: git config --system core.longpaths true
+        run: |
+          git config --system core.longpaths true
+          git config --system core.autocrlf false
+          git config --system core.eol lf
 
       - name: Checkout repository
         uses: actions/checkout@v6

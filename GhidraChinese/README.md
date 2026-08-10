@@ -141,8 +141,17 @@ git push origin ghidra-zh-12.1.2-r1
   再从 `vcvarsall.bat` 读出 SDK 版本，所以不用引入第三方的 msvc-dev-cmd action。
   `windows-latest` 自带 VS 的 C++ 工作负载（MSVC + Windows SDK + ATL），正好满足
   `CheckToolChain` 的要求。
+- **必须强制 LF 签出**（最反直觉的一个坑，踩过一次）。Ghidra 的 `gradlew` 用 POSIX 的
+  `read` 循环逐行读 `application.properties`，再校验 `application.release.name` 是不是
+  `PUBLIC`/`DEV`。而 `.gitattributes` 里 `*.properties text` 意味着**按平台原生换行符签出**，
+  Windows 上就是 CRLF——读出来的值变成 `DEV\r`，校验必然失败，然后脚本抛出一句极具误导性的
+  `Please install Gradle 8.5 or later and put it on your PATH.`（其实 Gradle 一点问题没有）。
+  所以 checkout **之前**要同时设 `core.autocrlf=false` **和** `core.eol=lf`：
+  只设前者不够，因为 `core.eol` 默认是 `native`；只设后者也不行，因为 `autocrlf=true` 会覆盖它。
+  真正需要 CRLF 的 `.bat`/`.sln`/`.vcxproj` 在 `.gitattributes` 里带**显式** `eol=crlf`，
+  优先级高于 `core.eol`，所以 MSVC 工具链不受影响。
 - **长路径**。Ghidra 源码树本身就深，构建产物还要再深几层，会撞上 260 字符上限；
-  所以 checkout **之前**先 `git config --system core.longpaths true`。
+  同样要在 checkout **之前**设 `git config --system core.longpaths true`。
 - **Python 用 `actions/setup-python`**，统一调 `python`（Git Bash 里通常没有 `python3`）。
   Gradle 自己会按 `python3 / python / py` 顺序探测，setup-python 保证版本落在
   `application.python.supported` 范围内。
