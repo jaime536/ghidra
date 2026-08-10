@@ -48,6 +48,13 @@ import subprocess
 import sys
 from pathlib import Path
 
+# This script reports in Chinese, but Python on Windows encodes stdout with the system locale
+# (cp1252 on a GitHub runner), which cannot represent those characters and raises part-way
+# through printing - after the files have already been copied. Ask for UTF-8 explicitly.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OVERLAY_ROOT = REPO_ROOT / "GhidraChinese" / "help-zh"
 MANIFEST = OVERLAY_ROOT / "manifest.tsv"

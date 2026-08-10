@@ -30,6 +30,12 @@ Usage:  tools/check_catalog.py Ghidra/Extensions/zh-cn-l10n/data/i18n/zh_CN.prop
 import sys
 from pathlib import Path
 
+# Reports are in Chinese; Python on Windows would otherwise encode stdout with the system locale
+# (cp1252 on a GitHub runner) and raise UnicodeEncodeError instead of printing them.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+
 SEPARATORS = "=:"
 
 
