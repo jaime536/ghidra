@@ -29,6 +29,7 @@ import docking.action.DockingActionIf;
 import docking.util.AnimationUtils;
 import docking.widgets.VariableHeightPanel;
 import docking.widgets.label.GDLabel;
+import generic.i18n.L10N;
 import generic.theme.GColor;
 import generic.theme.GThemeDefaults.Colors;
 import generic.theme.GThemeDefaults.Colors.Palette;
@@ -274,7 +275,9 @@ public class GenericHeader extends JPanel {
 	}
 
 	public void setTitle(String title) {
-		titlePanel.setTitle(title);
+		// display-time only; ComponentPlaceholder keeps the untranslated title, which is what
+		// gets written to the tool's XML and matched against on restore
+		titlePanel.setTitle(L10N.tr(title));
 	}
 
 	public String getTitle() {

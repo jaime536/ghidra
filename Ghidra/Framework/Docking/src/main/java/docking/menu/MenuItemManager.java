@@ -26,6 +26,7 @@ import javax.swing.event.ChangeListener;
 import docking.ActionContext;
 import docking.DefaultActionContext;
 import docking.action.*;
+import generic.i18n.L10N;
 import ghidra.util.Msg;
 import ghidra.util.StringUtilities;
 import resources.ResourceManager;
@@ -184,7 +185,7 @@ class MenuItemManager implements ManagedMenuItem, PropertyChangeListener, Action
 	private void updateMenuItem() {
 		MenuData menuData = isPopup ? action.getPopupMenuData() : action.getMenuBarData();
 		if (menuData != null) {
-			String text = menuData.getMenuItemName();
+			String text = L10N.tr(menuData.getMenuItemName(), menuData.getMnemonic());
 			String trimmed = StringUtilities.trimMiddle(text, 50);
 			menuItem.setText(trimmed);
 			Icon menuIcon = menuData.getMenuIcon();

@@ -25,6 +25,7 @@ import javax.swing.*;
 import org.apache.commons.collections4.map.LazyMap;
 
 import docking.framework.ApplicationInformationDisplayFactory;
+import generic.i18n.L10N;
 import generic.util.WindowUtilities;
 import ghidra.framework.Application;
 import ghidra.util.Swing;
@@ -107,7 +108,7 @@ public class DockingDialog extends JDialog implements HelpDescriptor {
 
 	private DockingDialog(Dialog parent, DialogComponentProvider comp,
 			Component centeredOnComponent) {
-		super(parent, comp.getTitle(), comp.isModal());
+		super(parent, L10N.tr(comp.getTitle()), comp.isModal());
 		owningWindowManager = DockingWindowManager.getInstance(parent);
 		init(comp);
 		initializeLocationAndSize(centeredOnComponent);
@@ -115,14 +116,14 @@ public class DockingDialog extends JDialog implements HelpDescriptor {
 
 	private DockingDialog(Frame parent, DialogComponentProvider comp,
 			Component centeredOnComponent) {
-		super(parent, comp.getTitle(), comp.isModal());
+		super(parent, L10N.tr(comp.getTitle()), comp.isModal());
 		owningWindowManager = DockingWindowManager.getInstance(parent);
 		init(comp);
 		initializeLocationAndSize(centeredOnComponent);
 	}
 
 	private DockingDialog(DialogComponentProvider comp, Component centeredOnComponent) {
-		super(createHiddenParentFrame(), comp.getTitle(), comp.isModal());
+		super(createHiddenParentFrame(), L10N.tr(comp.getTitle()), comp.isModal());
 		init(comp);
 		initializeLocationAndSize(centeredOnComponent);
 	}

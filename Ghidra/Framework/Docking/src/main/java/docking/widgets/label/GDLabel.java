@@ -20,6 +20,7 @@ import javax.swing.*;
 import docking.widgets.GComponent;
 import docking.widgets.checkbox.GCheckBox;
 import docking.widgets.checkbox.GHtmlCheckBox;
+import generic.i18n.L10N;
 
 /**
  * A 'dynamic' label (the text can be changed), with HTML rendering disabled.
@@ -59,7 +60,7 @@ public class GDLabel extends JLabel implements GComponent {
 	 * @param text non-html string to be displayed by the label
 	 */
 	public GDLabel(String text) {
-		super(text);
+		super(L10N.tr(text));
 		init();
 	}
 
@@ -78,7 +79,7 @@ public class GDLabel extends JLabel implements GComponent {
 	 *           {@link SwingConstants#TRAILING}
 	 */
 	public GDLabel(String text, int horizontalAlignment) {
-		super(text, horizontalAlignment);
+		super(L10N.tr(text), horizontalAlignment);
 		init();
 	}
 
@@ -98,7 +99,7 @@ public class GDLabel extends JLabel implements GComponent {
 	 *           {@link SwingConstants#TRAILING} 
 	 */
 	public GDLabel(String text, Icon icon, int horizontalAlignment) {
-		super(text, icon, horizontalAlignment);
+		super(L10N.tr(text), icon, horizontalAlignment);
 		init();
 	}
 

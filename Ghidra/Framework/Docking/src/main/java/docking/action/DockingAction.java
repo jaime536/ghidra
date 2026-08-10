@@ -25,6 +25,7 @@ import javax.swing.*;
 
 import docking.*;
 import docking.widgets.EmptyBorderButton;
+import generic.i18n.L10N;
 import generic.theme.GIcon;
 import ghidra.util.*;
 import ghidra.util.datastruct.WeakDataStructureFactory;
@@ -286,7 +287,7 @@ public abstract class DockingAction implements DockingActionIf {
 		if (tt == null || tt.length() == 0) {
 			tt = getName();
 		}
-		button.setToolTipText(tt);
+		button.setToolTipText(L10N.tr(tt));
 		button.setEnabled(isEnabled());
 
 		// Reverting GT-2452 because some buttons need to be able to respond to fast clicking.

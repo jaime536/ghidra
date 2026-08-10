@@ -34,6 +34,7 @@ import docking.event.mouse.GMouseListenerAdapter;
 import docking.menu.DialogToolbarButton;
 import docking.util.AnimationUtils;
 import docking.widgets.label.GDHtmlLabel;
+import generic.i18n.L10N;
 import generic.theme.GColor;
 import generic.theme.GThemeDefaults.Colors.Messages;
 import ghidra.util.*;
@@ -672,7 +673,7 @@ public class DialogComponentProvider
 	@Override
 	public void setStatusText(String message, MessageType type, boolean alert) {
 
-		String text = StringUtils.isBlank(message) ? " " : message;
+		String text = StringUtils.isBlank(message) ? " " : L10N.tr(message);
 		Swing.runIfSwingOrRunLater(() -> doSetStatusText(text, type, alert));
 	}
 
@@ -1113,9 +1114,11 @@ public class DialogComponentProvider
 	 * @param title the title
 	 */
 	public void setTitle(String title) {
+		// the untranslated title is kept as this provider's identity; only the window shows the
+		// translation
 		this.title = title;
 		if (dialog != null) {
-			dialog.setTitle(title);
+			dialog.setTitle(L10N.tr(title));
 		}
 	}
 

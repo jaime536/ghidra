@@ -22,6 +22,7 @@ import javax.swing.event.PopupMenuListener;
 
 import docking.action.DockingActionIf;
 import docking.action.MenuData;
+import generic.i18n.L10N;
 
 /**
  * Class to manage a hierarchy of menus.
@@ -201,7 +202,7 @@ public class MenuManager implements ManagedMenuItem {
 	 */
 	public JMenu getMenu() {
 		if (menu == null) {
-			menu = new JMenu(name);
+			menu = new JMenu(L10N.tr(name, mnemonicKey));
 			if (mnemonicKey != MenuData.NO_MNEMONIC) {
 				menu.setMnemonic(mnemonicKey);
 			}

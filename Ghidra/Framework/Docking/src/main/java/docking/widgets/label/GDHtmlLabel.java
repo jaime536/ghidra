@@ -20,6 +20,7 @@ import javax.swing.SwingConstants;
 
 import docking.widgets.checkbox.GCheckBox;
 import docking.widgets.checkbox.GHtmlCheckBox;
+import generic.i18n.L10N;
 
 /**
  * A 'dynamic' label (the text can be changed), with HTML rendering allowed.
@@ -60,6 +61,6 @@ public class GDHtmlLabel extends AbstractHtmlLabel {
 	 * @param text string to be displayed by the label
 	 */
 	public GDHtmlLabel(String text) {
-		super(text);
+		super(L10N.tr(text));
 	}
 }

@@ -1,0 +1,79 @@
+name: Build Ghidra
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  # Fast feedback on the localization assets; these are hand-edited files where a mistake is
+  # invisible at runtime (the string simply stays English), so they are checked explicitly.
+  localization:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Check translation catalogs
+        run: python3 tools/check_catalog.py Ghidra/Extensions/zh-cn-l10n/data/i18n/*.properties
+
+      - name: Report stale help translations
+        run: python3 tools/help_zh.py check
+
+  build:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest]
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Read Ghidra JDK Version
+        run: echo "JDK_VER=$(awk -F'=' '$1=="application.java.min" {print $2}' Ghidra/application.properties)" >> $GITHUB_ENV
+
+      - name: Setup JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '${{ env.JDK_VER }}'
+
+      - name: Fetch Dependencies
+        run: ./gradlew -I gradle/support/fetchDependencies.gradle -DhideDownloadProgress -DnoEclipse
+
+      # The Chinese help pages live in a parallel tree so that upstream's own help files stay
+      # untouched in git; they have to be laid over the source tree before the help tasks run.
+      - name: Overlay Chinese help pages
+        run: python3 tools/help_zh.py apply
+
+      - name: Build Ghidra
+        run: ./gradlew buildGhidra --parallel
+
+      - name: Upload distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghidra-zh-${{ matrix.platform }}
+          path: build/dist/*.zip
+          if-no-files-found: error
+
+  release:
+    # Only on a tag, so ordinary pushes stay cheap.
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ghidra-zh-*
+          merge-multiple: true
+          path: dist
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          generate_release_notes: true

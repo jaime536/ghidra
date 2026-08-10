@@ -24,6 +24,7 @@ import javax.swing.KeyStroke;
 import org.apache.commons.lang3.StringUtils;
 
 import docking.action.DockingActionIf;
+import generic.i18n.L10N;
 import ghidra.docking.util.LookAndFeelUtils;
 import ghidra.util.StringUtilities;
 
@@ -88,9 +89,9 @@ public class DockingToolBarUtils {
 	private static String getToolTipText(DockingActionIf action) {
 		String description = action.getDescription();
 		if (!StringUtils.isEmpty(description)) {
-			return description;
+			return L10N.tr(description);
 		}
-		return action.getName();
+		return L10N.tr(action.getName());
 	}
 
 	private static String getKeyBindingAcceleratorText(JButton button, KeyStroke keyStroke) {

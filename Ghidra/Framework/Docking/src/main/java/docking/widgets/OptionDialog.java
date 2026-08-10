@@ -27,6 +27,7 @@ import docking.widgets.checkbox.GCheckBox;
 import docking.widgets.dialogs.*;
 import docking.widgets.label.GHtmlLabel;
 import docking.widgets.label.GIconLabel;
+import generic.i18n.L10N;
 import ghidra.util.*;
 import ghidra.util.exception.AssertException;
 
@@ -355,7 +356,9 @@ public class OptionDialog extends DialogComponentProvider {
 			optionName = optionName.substring(0, ampLoc) + optionName.substring(ampLoc + 1);
 		}
 
-		JButton button = new JButton(optionName);
+		// the caller's optionName still names the button (see buildButtons), so lookups by name
+		// and the returned result value are unaffected
+		JButton button = new JButton(L10N.tr(optionName, mnemonicKey));
 		if (mnemonicKey != '\0') {
 			button.setMnemonic(mnemonicKey);
 		}
@@ -369,14 +372,14 @@ public class OptionDialog extends DialogComponentProvider {
 	protected JPanel createTextPanel(String message) {
 
 		if (!HTMLUtilities.isHTML(dialogMessage)) {
-			MultiLineLabel label = new MultiLineLabel(dialogMessage);
+			MultiLineLabel label = new MultiLineLabel(L10N.tr(dialogMessage));
 			label.setName(MESSAGE_COMPONENT_NAME);
 			return label;
 		}
 
 		// we override preferred size here to compensate for html text that is being clipped on
 		// some operating systems
-		JLabel label = new GHtmlLabel(dialogMessage) {
+		JLabel label = new GHtmlLabel(L10N.tr(dialogMessage)) {
 			@Override
 			public Dimension getPreferredSize() {
 				Dimension ps = super.getPreferredSize();

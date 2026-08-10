@@ -22,6 +22,7 @@ import javax.swing.*;
 
 import docking.widgets.EmptyBorderButton;
 import docking.widgets.label.GDLabel;
+import generic.i18n.L10N;
 import generic.theme.CloseIcon;
 
 /**
@@ -135,6 +136,9 @@ public class DockingTabRenderer extends JPanel {
 	}
 
 	public void setTitle(String tabText, String fullTitle) {
+		// display-time only; the placeholder retains the untranslated text for tool persistence
+		tabText = L10N.tr(tabText);
+		fullTitle = L10N.tr(fullTitle);
 		titleLabel.setText(getShortenedTitle(tabText));
 		String trimmedTabText = tabText.trim();
 		String trimmedTitleText = fullTitle.trim();

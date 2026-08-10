@@ -1,0 +1,4 @@
+# Chinese help overlay: upstream blob hash each translation was made from.
+# Regenerate after reviewing a translation with: tools/help_zh.py adopt
+
+Ghidra/Features/Base/src/main/help/help/topics/Misc/Welcome_to_Ghidra_Help.htm	3eddb24f9c226a9988a477fcd4b543212d68c0ff

@@ -18,6 +18,7 @@ package docking.widgets.checkbox;
 import javax.swing.*;
 
 import docking.widgets.GComponent;
+import generic.i18n.L10N;
 
 /**
  * A {@link JCheckBox} that has HTML rendering disabled.
@@ -74,7 +75,7 @@ public class GCheckBox extends JCheckBox implements GComponent {
 	 * @param text text of the check box
 	 */
 	public GCheckBox(String text) {
-		super(text);
+		super(L10N.tr(text));
 		init();
 	}
 
@@ -99,7 +100,7 @@ public class GCheckBox extends JCheckBox implements GComponent {
 	 * @param selected initial selection state, true means selected
 	 */
 	public GCheckBox(String text, boolean selected) {
-		super(text, selected);
+		super(L10N.tr(text), selected);
 		init();
 	}
 
@@ -110,7 +111,7 @@ public class GCheckBox extends JCheckBox implements GComponent {
 	 * @param icon image to display
 	 */
 	public GCheckBox(String text, Icon icon) {
-		super(text, icon);
+		super(L10N.tr(text), icon);
 		init();
 	}
 
@@ -123,7 +124,7 @@ public class GCheckBox extends JCheckBox implements GComponent {
 	 * @param selected initial selection state, true means selected
 	 */
 	public GCheckBox(String text, Icon icon, boolean selected) {
-		super(text, icon, selected);
+		super(L10N.tr(text), icon, selected);
 		init();
 	}
 

@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import docking.widgets.checkbox.GCheckBox;
 import docking.widgets.checkbox.GHtmlCheckBox;
+import generic.i18n.L10N;
 import ghidra.util.Msg;
 import utilities.util.reflection.ReflectionUtilities;
 
@@ -65,7 +66,7 @@ public class GHtmlLabel extends AbstractHtmlLabel {
 	 * @param text string to be displayed by the label
 	 */
 	public GHtmlLabel(String text) {
-		super(text);
+		super(L10N.tr(text));
 	}
 
 	/**
