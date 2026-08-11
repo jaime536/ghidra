@@ -107,8 +107,11 @@ python3 tools/help_zh.py apply --revert
 | job | 触发时机 | 作用 |
 |---|---|---|
 | `localization` | 每次 push | 跑词典体检 + 帮助译文陈旧检测，几秒出结果 |
-| `build` | 每次 push | **Linux + Windows 两个平台**并行：抓依赖 → 叠加中文帮助 → `gradle buildGhidra` → 上传 zip |
-| `release` | **只在推 tag 时** | 收集两个平台的产物，自动创建 GitHub Release 并附上 zip |
+| `build` | 每次 push | **Linux + Windows + macOS 三个平台**并行：抓依赖 → 叠加中文帮助 → `gradle buildGhidra` → 上传 zip |
+| `release` | **只在推 tag 时** | 收集各平台产物，自动创建 GitHub Release 并附上 zip |
+
+实测耗时（12.1.2 基线）：Linux 约 9 分半，macOS 约 12 分半，Windows 约 13 分半。
+三条腿并行，所以一次完整发版约 18 分钟（以最慢的 Windows 为准）。
 
 JDK 版本不写死，而是从 `Ghidra/application.properties` 的 `application.java.min` 读出来：
 
@@ -118,19 +121,33 @@ JDK 版本不写死，而是从 `Ghidra/application.properties` 的 `application
 
 所以升级基线（21 → 25）时 CI 会自己跟着变。
 
-**日常**：push 之后到 Actions 页面下载 artifact —— `ghidra-zh-ubuntu-latest` 或
-`ghidra-zh-windows-latest`。
+**日常 push 不会产生 Release**，只有 Actions artifact —— 到 Actions 页面下载
+`ghidra-zh-ubuntu-latest` / `ghidra-zh-windows-latest` / `ghidra-zh-macos-latest`。
+artifact 保留 90 天。
 
-**正式发版**：打一个 tag 推上去，Release 会自动生成：
+**正式发版**：打一个 tag 推上去，Release 会自动生成（附件长期保留）：
 
 ```bash
 git tag ghidra-zh-12.1.2-r1
 git push origin ghidra-zh-12.1.2-r1
 ```
 
-产物是标准的 Ghidra 发行包 `build/dist/ghidra_<版本>_<日期>.zip`，解压后 `./ghidraRun` 直接跑。
+产物是标准的 Ghidra 发行包，解压后运行 `ghidraRun`（Windows 为 `ghidraRun.bat`）；
+加 `-Dghidra.i18n=zh_CN` 即为中文界面。
 
-`buildGhidra` **只产出当前 runner 平台的包**，所以 Linux 包和 Windows 包分别由 matrix 的两条腿产出。
+### 某个平台构建失败时会怎样
+
+**照发不误，但会明确标注缺了哪个平台。** `release` job 用的是
+`if: always() && startsWith(github.ref, 'refs/tags/')`——如果只写 `needs: build`，
+Actions 默认要求**所有** matrix 腿都成功，那么任何一个平台挂掉就一个包都发不出来，
+这与 `fail-fast: false` 的初衷正好相反。
+
+`tools/release_notes.py` 会检查实际收集到的安装包：平台名直接从文件名解析
+（`buildGhidra` 产出的是 `ghidra_<版本>_<日期>_<平台>.zip`，见
+`gradle/root/distribution.gradle` 的 `archiveFileName`），在 Release 说明里列出包含哪些、
+并对缺失的平台打出醒目警告。**如果一个包都没有，它会直接报错**，不会发出空 Release。
+
+`buildGhidra` **只产出当前 runner 平台的包**，所以三个平台的包分别由 matrix 的三条腿产出。
 
 ### Windows 构建的几个要点
 

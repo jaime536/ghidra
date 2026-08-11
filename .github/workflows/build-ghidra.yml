@@ -113,21 +113,39 @@ jobs:
 
   release:
     # Only on a tag, so ordinary pushes stay cheap.
-    if: startsWith(github.ref, 'refs/tags/')
+    #
+    # always() is what keeps one broken platform from blocking the whole release: `needs`
+    # normally requires every matrix leg to have succeeded, which would contradict
+    # fail-fast: false and throw away good packages because a different platform failed. The
+    # coverage step still refuses to publish when nothing at all was built.
+    if: ${{ always() && startsWith(github.ref, 'refs/tags/') }}
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
       - name: Download distributions
         uses: actions/download-artifact@v4
+        # v4 fails outright when the pattern matches nothing, which would pre-empt the clearer
+        # diagnosis from the next step
+        continue-on-error: true
         with:
           pattern: ghidra-zh-*
           merge-multiple: true
           path: dist
 
+      # Names the platforms this release actually ships, and flags any that are missing, so a
+      # partial release is labelled rather than silently short.
+      - name: Record platform coverage
+        run: python3 tools/release_notes.py dist notes.md
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*.zip
+          body_path: notes.md
           generate_release_notes: true
+          fail_on_unmatched_files: true
