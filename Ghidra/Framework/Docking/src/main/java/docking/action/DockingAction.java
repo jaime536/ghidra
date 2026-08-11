@@ -302,7 +302,9 @@ public abstract class DockingAction implements DockingActionIf {
 		MenuData menuData = isPopup ? popupMenuData : menuBarData;
 		if (menuData != null) {
 
-			String text = menuData.getMenuItemName();
+			// This duplicates MenuItemManager.updateMenuItem; that one only runs when the action's
+			// menu data changes later, so the text a user actually sees first comes from here.
+			String text = L10N.tr(menuData.getMenuItemName(), menuData.getMnemonic());
 			String trimmed = StringUtilities.trimMiddle(text, 50);
 			menuItem.setText(trimmed);
 			Icon icon = menuData.getMenuIcon();

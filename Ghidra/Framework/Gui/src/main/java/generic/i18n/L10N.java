@@ -195,10 +195,13 @@ public class L10N {
 
 	/**
 	 * Installs a catalog directly, bypassing {@link Application} and the system properties.
+	 * <p>
+	 * Public so that tests in the modules that own the hooked call sites can drive it; the
+	 * translation itself happens in Docking, one module downstream of here.
 	 *
 	 * @param catalog the translations, or null to restore normal lazy loading
 	 */
-	static void setCatalogForTesting(Map<String, String> catalog) {
+	public static void setCatalogForTesting(Map<String, String> catalog) {
 		dictionary = catalog == null ? null : Map.copyOf(catalog);
 	}
 

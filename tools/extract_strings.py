@@ -52,6 +52,15 @@ SOURCE_ROOT = REPO_ROOT / "Ghidra"
 
 STRING_LITERAL = re.compile(r'"((?:[^"\\]|\\.)*)"')
 
+# Menu paths are frequently assembled from constants rather than literals, e.g.
+#   private static final String MENU_ITEM_DELETE_TOOL = "Delete Tool";
+#   new MenuData(new String[] { ToolConstants.MENU_TOOLS, MENU_ITEM_DELETE_TOOL }, ...)
+# so the braces have to be read with the file's own String constants in scope, or those items
+# are invisible to this scan while still being perfectly translatable at runtime.
+STRING_CONSTANT = re.compile(
+    r'(?:static\s+final|final\s+static)\s+String\s+(\w+)\s*=\s*"((?:[^"\\]|\\.)*)"')
+IDENTIFIER_REF = re.compile(r"(?:^|[\s,{])(?:\w+\.)?([A-Z][A-Z0-9_]{2,})(?=[\s,}]|$)")
+
 # The menu patterns capture an argument list. Every literal in it is taken, not just the leaf:
 # the earlier elements are submenu names ("Data", "References") that the user reads too, and
 # which frequently have no definition of their own anywhere else.
@@ -176,10 +185,18 @@ def extract() -> dict[str, collections.Counter]:
             continue
         text = strip_comments(text)
 
+        constants = {name: value for name, value in STRING_CONSTANT.findall(text)}
+
         for pattern in MENU_PATTERNS:
             for match in pattern.finditer(text):
-                for literal in STRING_LITERAL.findall(match.group(1)):
+                arguments = match.group(1)
+                for literal in STRING_LITERAL.findall(arguments):
                     found["menu"][strip_mnemonic(literal)] += 1
+                # Resolve constants declared in this same file; cross-file ones (ToolConstants
+                # and friends) are picked up where they are declared.
+                for name in IDENTIFIER_REF.findall(STRING_LITERAL.sub("", arguments)):
+                    if name in constants:
+                        found["menu"][strip_mnemonic(constants[name])] += 1
 
         for match in MNEMONIC_LITERAL.finditer(text):
             found["menu"][strip_mnemonic(match.group(1))] += 1
