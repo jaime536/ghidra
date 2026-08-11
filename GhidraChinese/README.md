@@ -33,13 +33,37 @@ Java 字符串字面量（`new MenuData(` 726 处、`setDescription(` 595 处、
 
 ## 使用
 
-汉化默认**关闭**，同一份构建既是英文版也是中文版：
+**发行包开箱即中文**，直接运行 `ghidraRun`（Windows 为 `ghidraRun.bat`）即可。
 
-```bash
-ghidraRun -Dghidra.i18n=zh_CN
+想要英文界面，把 `support/launch.properties` 里这一行改成 `off`（或删掉）：
+
+```properties
+VMARGS=-Dghidra.i18n=zh_CN
 ```
 
-用户可以用 `<用户配置目录>/i18n/zh_CN.properties` 覆盖任意词条，无需重新编译。
+同一份构建既是中文版也是英文版，改的只是发行包的默认值。
+
+> ### ⚠️ 命令行上加 `-D` 是无效的
+>
+> `ghidraRun -Dghidra.i18n=zh_CN` **不起作用**，界面仍是英文。
+>
+> `ghidraRun` 把命令行参数原样透传给 `support/launch.sh`，而后者最终拼成：
+>
+> ```
+> java <VMARGS...> -cp <classpath> ghidra.Ghidra ghidra.GhidraRun <你的参数>
+> ```
+>
+> 你的参数落在**类名之后**——那是给程序的参数，JVM 根本不解析，
+> 于是 `System.getProperty("ghidra.i18n")` 为 null。`ghidraRun.bat` 的 `%*` 同理。
+>
+> 能真正送进 JVM 的只有两条路，它们都拼在类名之前：
+>
+> | 方式 | 怎么用 |
+> |---|---|
+> | `support/launch.properties` | 加 `VMARGS=-Dghidra.i18n=zh_CN`（发行包已内置） |
+> | 环境变量 | `GHIDRA_JAVA_OPTIONS=-Dghidra.i18n=zh_CN ./ghidraRun` |
+
+用户还可以用 `<用户配置目录>/i18n/zh_CN.properties` 覆盖任意词条，无需重新编译。
 
 ## 目录
 
@@ -60,7 +84,7 @@ ghidraRun -Dghidra.i18n=zh_CN
 1. 带上 dump 开关跑一遍界面，收集所有显示过但没有译文的字符串：
 
    ```bash
-   ghidraRun -Dghidra.i18n=zh_CN -Dghidra.i18n.dump=/tmp/missing.properties
+   GHIDRA_JAVA_OPTIONS="-Dghidra.i18n=zh_CN -Dghidra.i18n.dump=/tmp/missing.properties" ./ghidraRun
    ```
 
 2. 给 `/tmp/missing.properties` 里的条目填上译文，并入 `zh_CN.properties`。
@@ -151,8 +175,8 @@ tag 由 workflow 自己创建，用的是 Actions 的 `GITHUB_TOKEN`。这样发
 git tag ghidra-zh-12.1.2-r2 && git push origin ghidra-zh-12.1.2-r2
 ```
 
-产物是标准的 Ghidra 发行包，解压后运行 `ghidraRun`（Windows 为 `ghidraRun.bat`）；
-加 `-Dghidra.i18n=zh_CN` 即为中文界面。
+产物是标准的 Ghidra 发行包，解压后运行 `ghidraRun`（Windows 为 `ghidraRun.bat`）
+即为中文界面，无需额外参数。
 
 ### 某个平台构建失败时会怎样
 
