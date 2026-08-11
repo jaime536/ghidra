@@ -3,6 +3,11 @@ name: Build Ghidra
 on:
   push:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: '发版 tag（留空＝只构建不发版），例如 ghidra-zh-12.1.2-r1'
+        required: false
+        default: ''
 
 defaults:
   run:
@@ -118,20 +123,37 @@ jobs:
           if-no-files-found: error
 
   release:
-    # Only on a tag, so ordinary pushes stay cheap.
+    # Releases come from a tag, either pushed directly or named in the release_tag input on a
+    # manual run. The input exists because publishing otherwise requires a local clone and a
+    # command line; with it, a release is a form on the Actions tab.
     #
     # always() is what keeps one broken platform from blocking the whole release: `needs`
     # normally requires every matrix leg to have succeeded, which would contradict
     # fail-fast: false and throw away good packages because a different platform failed. The
     # coverage step still refuses to publish when nothing at all was built.
-    if: ${{ always() && startsWith(github.ref, 'refs/tags/') }}
+    if: ${{ always() && (startsWith(github.ref, 'refs/tags/') || inputs.release_tag != '') }}
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+
+      # action-gh-release does not document creating a missing tag, so create it here rather
+      # than rely on unspecified behaviour. GITHUB_TOKEN can write refs; note that a push made
+      # with it deliberately does not start another workflow run, so this cannot loop.
+      - name: Create tag
+        if: ${{ inputs.release_tag != '' }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "::notice::标签 $RELEASE_TAG 已存在，沿用它。"
+            exit 0
+          fi
+          git tag "$RELEASE_TAG" "$GITHUB_SHA"
+          git push origin "refs/tags/$RELEASE_TAG"
 
       - name: Download distributions
         uses: actions/download-artifact@v4
@@ -151,6 +173,9 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
+          # Named explicitly: on a manual run github.ref_name is the branch, not the tag.
+          tag_name: ${{ env.RELEASE_TAG }}
+          target_commitish: ${{ github.sha }}
           files: dist/*.zip
           body_path: notes.md
           generate_release_notes: true

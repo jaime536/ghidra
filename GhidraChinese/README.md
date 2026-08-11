@@ -125,11 +125,22 @@ JDK 版本不写死，而是从 `Ghidra/application.properties` 的 `application
 `ghidra-zh-ubuntu-latest` / `ghidra-zh-windows-latest` / `ghidra-zh-macos-latest`。
 artifact 保留 90 天。
 
-**正式发版**：打一个 tag 推上去，Release 会自动生成（附件长期保留）：
+**正式发版（推荐：网页操作，不需要命令行）**：
+
+> GitHub 网页 → **Actions** → 左侧 **Build Ghidra** → 右上 **Run workflow**
+> → 在 **发版 tag** 填版本号（如 `ghidra-zh-12.1.2-r2`）→ **Run workflow**
+
+约 18 分钟后 Releases 页面就会出现新版本，附带三个平台的安装包（附件长期保留）。
+**留空则只构建、不发版。**
+
+tag 由 workflow 自己创建，用的是 Actions 的 `GITHUB_TOKEN`。这样发版完全不需要本地克隆。
+（用 `GITHUB_TOKEN` 推的 tag 不会再触发新的 workflow run，GitHub 明确防止此类递归，
+所以不会出现「发版→构建→再发版」的循环。）
+
+如果你有本地克隆，直接推 tag 也一样会发版：
 
 ```bash
-git tag ghidra-zh-12.1.2-r1
-git push origin ghidra-zh-12.1.2-r1
+git tag ghidra-zh-12.1.2-r2 && git push origin ghidra-zh-12.1.2-r2
 ```
 
 产物是标准的 Ghidra 发行包，解压后运行 `ghidraRun`（Windows 为 `ghidraRun.bat`）；
