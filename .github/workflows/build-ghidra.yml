@@ -25,8 +25,14 @@ jobs:
         with:
           python-version: '3.12'
 
+      # --source-strings cross-checks every key against the strings L10N can actually see. A
+      # mistyped key, or one upstream has since reworded, produces no error at runtime - the line
+      # just stays English - so it has to be caught here.
       - name: Check translation catalogs
-        run: python tools/check_catalog.py Ghidra/Extensions/zh-cn-l10n/data/i18n/*.properties
+        run: |
+          python tools/extract_strings.py > /tmp/source-strings.txt
+          python tools/check_catalog.py Ghidra/Extensions/zh-cn-l10n/data/i18n/*.properties \
+            --source-strings /tmp/source-strings.txt
 
       - name: Report stale help translations
         run: python tools/help_zh.py check

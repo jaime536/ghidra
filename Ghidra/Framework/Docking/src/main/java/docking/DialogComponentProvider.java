@@ -486,7 +486,7 @@ public class DialogComponentProvider
 	 * okCallback() will be invoked whenever the "OK" button is pressed.
 	 */
 	protected void addOKButton() {
-		okButton = new JButton("OK");
+		okButton = new JButton(L10N.tr("OK", 'K'));
 		okButton.setMnemonic('K');
 		okButton.setName("OK");
 		okButton.getAccessibleContext().setAccessibleName("OK");
@@ -499,7 +499,7 @@ public class DialogComponentProvider
 	 * CancelCallback() will be invoked whenever the "Cancel" button is pressed.
 	 */
 	protected void addCancelButton() {
-		cancelButton = new JButton("Cancel");
+		cancelButton = new JButton(L10N.tr("Cancel", 'C'));
 		cancelButton.setMnemonic('C');
 		cancelButton.setName("Cancel");
 		cancelButton.getAccessibleContext().setAccessibleName("Cancel");
@@ -512,7 +512,7 @@ public class DialogComponentProvider
 	 * dismissCallback() will be invoked whenever the "Dismiss" button is pressed.
 	 */
 	protected void addDismissButton() {
-		dismissButton = new JButton("Dismiss");
+		dismissButton = new JButton(L10N.tr("Dismiss", 'D'));
 		dismissButton.setMnemonic('D');
 		dismissButton.setName("Dismiss");
 		dismissButton.getAccessibleContext().setAccessibleName("Dismiss");
@@ -525,7 +525,7 @@ public class DialogComponentProvider
 	 * applyCallback() will be invoked whenever the "Apply" button is pressed.
 	 */
 	protected void addApplyButton() {
-		applyButton = new JButton("Apply");
+		applyButton = new JButton(L10N.tr("Apply", 'A'));
 		applyButton.setMnemonic('A');
 		applyButton.setName("Apply");
 		applyButton.getAccessibleContext().setAccessibleName("Apply");
@@ -545,7 +545,7 @@ public class DialogComponentProvider
 
 	protected void setOkButtonText(String text) {
 		if (okButton != null) {
-			okButton.setText(text);
+			okButton.setText(L10N.tr(text));
 		}
 	}
 
@@ -555,7 +555,7 @@ public class DialogComponentProvider
 	 */
 	protected void setOkToolTip(String tooltip) {
 		if (okButton != null) {
-			okButton.setToolTipText(tooltip);
+			okButton.setToolTipText(L10N.tr(tooltip));
 		}
 	}
 
@@ -565,13 +565,13 @@ public class DialogComponentProvider
 	 */
 	protected void setCancelToolTip(String tooltip) {
 		if (cancelButton != null) {
-			cancelButton.setToolTipText(tooltip);
+			cancelButton.setToolTipText(L10N.tr(tooltip));
 		}
 	}
 
 	protected void setCancelButtonText(String text) {
 		if (cancelButton != null) {
-			cancelButton.setText(text);
+			cancelButton.setText(L10N.tr(text));
 		}
 	}
 

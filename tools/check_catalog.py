@@ -27,6 +27,7 @@ left untranslated.
 Usage:  tools/check_catalog.py Ghidra/Extensions/zh-cn-l10n/data/i18n/zh_CN.properties
 """
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -77,12 +78,13 @@ def unescape(text: str) -> str:
     return "".join(out)
 
 
-def check(path: Path) -> list[str]:
+def check(path: Path) -> tuple[list[str], dict[str, int]]:
+    """Returns (problems, {key: line number})."""
     problems = []
     try:
         raw = path.read_text(encoding="utf-8")
     except UnicodeDecodeError as e:
-        return [f"{path}: 不是合法的 UTF-8 文件: {e}"]
+        return [f"{path}: 不是合法的 UTF-8 文件: {e}"], {}
 
     seen = {}
     logical, buffer, start_line = [], "", 0
@@ -121,21 +123,49 @@ def check(path: Path) -> list[str]:
             seen[plain_key] = number
 
     print(f"{path}: {len(seen)} 条词条")
-    return problems
+    return problems, seen
+
+
+def check_against_source(path: Path, keys: dict[str, int], source_file: Path) -> None:
+    """Warn about keys that no longer match anything in the source.
+
+    A key is only ever consulted by an exact lookup, so a typo - or a string upstream has since
+    reworded - produces no error, just a line that silently stays English. Reported as a warning
+    rather than a failure: the extractor only knows the call sites it scans for, so a legitimate
+    key can sit outside its reach.
+    """
+    known = {line.strip() for line in
+             source_file.read_text(encoding="utf-8").splitlines() if line.strip()}
+    stranded = sorted(key for key in keys if key not in known)
+    if not stranded:
+        print(f"{path}: 全部 {len(keys)} 个键都能在源码中找到。")
+        return
+
+    print(f"\n{path}: {len(stranded)} 个键在源码中找不到对应字符串（拼写错误，"
+          f"或上游已改动措辞）:")
+    for key in stranded[:40]:
+        print(f"  第 {keys[key]} 行: {key}")
+    if len(stranded) > 40:
+        print(f"  ... 另有 {len(stranded) - 40} 条")
 
 
 def main() -> int:
-    paths = [Path(p) for p in sys.argv[1:]]
-    if not paths:
-        print(__doc__)
-        return 2
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("catalogs", nargs="+", type=Path, help="要检查的 .properties 词典")
+    parser.add_argument("--source-strings", type=Path,
+                        help="tools/extract_strings.py 的输出，用于校验键是否真实存在")
+    args = parser.parse_args()
 
     problems = []
-    for path in paths:
+    for path in args.catalogs:
         if not path.exists():
             problems.append(f"{path}: 文件不存在")
             continue
-        problems.extend(check(path))
+        file_problems, keys = check(path)
+        problems.extend(file_problems)
+        if args.source_strings and args.source_strings.exists():
+            check_against_source(path, keys, args.source_strings)
 
     if problems:
         print(f"\n发现 {len(problems)} 个问题:")
