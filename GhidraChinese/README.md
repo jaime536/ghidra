@@ -71,17 +71,25 @@ ghidraRun -Dghidra.i18n=zh_CN
 
 ## 跟随上游升级
 
-**当前基线：`Ghidra_12.1.2_build`（上游稳定发布版 tag）。**
+### 分支
 
-汉化分支直接建立在上游 tag 之上，不跟 `master`——上游 `master` 的 `application.version` 长期是
-`12.2` + `release.name=DEV`，处于开发中期，不适合作为出包基线。上游小版本约每季度一次，
-补丁版间隔 1～2 周且改动很小（12.1.1→12.1.2 仅 60 文件 / 565 行）。
+| 分支 | 作用 |
+|---|---|
+| **`chinese`** | **汉化主线**，日常开发与发版都在这里 |
+| `master` | 上游纯净镜像，只做 `git merge upstream/master`，**永不放汉化提交** |
+
+两条线**血缘不同**，这是有意为之：`chinese` 建立在上游**稳定发布版 tag** 之上，
+而 `master` 跟的是上游 `master`。所以**不要把汉化并进 `master`**——那会把基线拖回
+`12.2` + `release.name=DEV` 的开发中期版本，也会毁掉 `master` 作为干净镜像的价值。
+
+**当前基线：`Ghidra_12.1.2_build`。** 上游小版本约每季度一次，补丁版间隔 1～2 周且改动
+很小（12.1.1→12.1.2 仅 60 文件 / 565 行）。
 
 上游发新稳定版（例如 `Ghidra_12.2_build`）时：
 
 ```bash
 git fetch upstream --tags
-git checkout claude/chinese-gui-upstream-sync-dy7jcm
+git checkout chinese
 git merge Ghidra_12.2_build          # 直接并入新 tag
 ```
 
